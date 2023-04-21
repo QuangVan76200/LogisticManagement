@@ -299,9 +299,9 @@ public class UserServiceImpl implements IUserService {
 			}
 			return CafeUtils.getResponse(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
-			log.error("Đã xảy ra lỗi khi thay đổi mật khẩu: " + e.getMessage(), e);
+			log.error("An error occurred while changing the password: " + e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Không thể thay đổi mật khẩu. Vui lòng thử lại sau.");
+					.body("The password cannot be changed. Please try again later.");
 		}
 	}
 
