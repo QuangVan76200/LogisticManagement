@@ -68,14 +68,19 @@ public class JWTFilter extends OncePerRequestFilter {
 		 return roles != null && roles.contains("ADMIN");
 	}
 
-	public boolean isUser() {
+	public boolean isCustomer() {
 		List<String> roles = (List<String>) claims.get("roles");
-		 return roles != null && roles.contains("USER");
+		 return roles != null && roles.contains("CUSTOMER");
 	}
 
 	public boolean isManager() {
 		List<String> roles = (List<String>) claims.get("roles");
 		 return roles != null && roles.contains("MANAGER");
+	}
+	
+	public boolean isStaff() {
+		List<String> roles = (List<String>) claims.get("roles");
+		 return roles != null && roles.contains("STAFF");
 	}
 
 	public String getCurrentUser() {

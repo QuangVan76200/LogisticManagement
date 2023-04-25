@@ -157,8 +157,8 @@ public class UserServiceImpl implements IUserService {
 						.orElseThrow(() -> new RuntimeException("Role Not Found"));
 				setRoles.add(roleAdmin);
 				break;
-			case "USER":
-				Role roleUser = roleServiceImpl.findByRoleName(RoleName.USER)
+			case "CUSTOMER":
+				Role roleUser = roleServiceImpl.findByRoleName(RoleName.CUSTOMER)
 						.orElseThrow(() -> new RuntimeException("Role not found"));
 				setRoles.add(roleUser);
 				break;
@@ -349,7 +349,7 @@ public class UserServiceImpl implements IUserService {
 			log.info("inside updateUser ", request);
 			String authUser = jwtFilter.getCurrentUser();
 			Optional<User> currentUser = userDao.findByUserName(authUser);
-			if (!jwtFilter.isUser() || !jwtFilter.isAdmin()) {
+			if (!jwtFilter.isCustomer() || !jwtFilter.isAdmin()) {
 				return CafeUtils.getResponse(CafeConstants.UNAUTHORIZATE_ACESS, HttpStatus.BAD_REQUEST);
 			}
 
