@@ -53,4 +53,28 @@ public class EmailUtils {
 		message.setContent(htmlMsg, "text/html");
 		emailSender.send(message);
 	}
+	
+	
+    public void sendOrderConfirmationEmail(String recipientEmail, String orderNumber, String orderStatus) {
+
+        MimeMessage message = emailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message);
+
+        try {
+            helper.setTo(recipientEmail);
+            helper.setSubject("Order Confirmation - " + orderNumber);
+
+            String text = "<p>Dear Customer,</p>"
+                    + "<p>We would like to confirm that your order <strong>" + orderNumber + "</strong> has been "
+                    + "<strong>" + orderStatus + "</strong>.</p>"
+                    + "<p>Thank you for shopping with us!</p>";
+
+            helper.setText(text, true);
+
+            emailSender.send(message);
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
 }

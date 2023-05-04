@@ -20,10 +20,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.common.FileUploadService;
 import com.example.demo.constants.CafeConstants;
 import com.example.demo.dao.IProductDao;
+import com.example.demo.dao.IStockDao;
 import com.example.demo.dao.impl.ProductRepositoryImpl;
 import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.dto.request.ProductSearchCriteriaDTO;
 import com.example.demo.entity.Product;
+import com.example.demo.entity.Stock;
 import com.example.demo.exception.FileMissingException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.service.IProductService;
@@ -38,6 +40,9 @@ public class ProductServiceImpl implements IProductService {
 
 	@Autowired
 	private IProductDao productDao;
+
+	@Autowired
+	private IStockDao stockDao;
 
 	@Autowired
 	private ProductRepositoryImpl productDaoImpl;
@@ -96,6 +101,12 @@ public class ProductServiceImpl implements IProductService {
 					? new FileMissingException("Product image cannot be blank", HttpStatus.BAD_REQUEST).toString()
 					: newAvatar);
 
+			// Thêm Stock mới vào danh sách listStock của sản phẩm
+			Stock newStock = new Stock();
+			newStock.setQuantity(productDto.getQuantity()); // Số lượng hàng tồn kho
+//			newStock.setShelf(shelfService.getShelfById(productDto.getShelfId())); // Tủ chứa sản phẩm
+			newProduct.addStock(newStock);
+
 			Product savedProduct = productDao.save(newProduct);
 
 			List<String> imageUrls = new ArrayList<>();
@@ -129,7 +140,7 @@ public class ProductServiceImpl implements IProductService {
 			List<Product> products = productDaoImpl.search(criteria);
 			List<ProductDTO> productsDTO = products.stream().map(product -> new ProductDTO(product))
 					.collect(Collectors.toList());
-			
+
 			return productsDTO;
 		} catch (Exception e) {
 			log.error("Error! An error occurred. Please try again later: " + e.getMessage(), e);

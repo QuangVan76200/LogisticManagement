@@ -64,8 +64,8 @@ public class ProductController {
 	ResponseEntity<?> newProduct(@ModelAttribute ProductDTO productDTO) {
 		log.info("Inside newProductController. ProductDTO: {}", productDTO);
 		try {
-
-			if (jwtFilter.isCustomer()) {
+			System.out.println( jwtFilter.isStaff());
+			if ( jwtFilter.isStaff()) {
 				return CafeUtils.getResponseData("succesfully", HttpStatus.OK, productService.newProduct(productDTO));
 			}
 		} catch (Exception e) {
