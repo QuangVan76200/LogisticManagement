@@ -65,7 +65,7 @@ public class ProductController {
 		log.info("Inside newProductController. ProductDTO: {}", productDTO);
 		try {
 			System.out.println( jwtFilter.isStaff());
-			if ( jwtFilter.isStaff()) {
+			if ( jwtFilter.isStaff() || jwtFilter.isManager()) {
 				return CafeUtils.getResponseData("succesfully", HttpStatus.OK, productService.newProduct(productDTO));
 			}
 		} catch (Exception e) {

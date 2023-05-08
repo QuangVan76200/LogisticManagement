@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,11 +15,18 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.example.demo.dto.request.ShelfDTO;
+import com.example.demo.dto.request.StockDTO;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @DynamicUpdate
 @DynamicInsert
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Table(name = "Stock")
 public class Stock implements Serializable {
@@ -36,8 +44,9 @@ public class Stock implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ShelfID", nullable = false)
 	private Shelf shelf;
-
-	@Column(name = "Quantity", nullable = false)
-	private Integer quantity;
+	
+	
+	
+	
 
 }

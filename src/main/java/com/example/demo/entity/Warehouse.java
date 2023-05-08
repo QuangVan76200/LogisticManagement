@@ -1,7 +1,9 @@
 package com.example.demo.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -17,12 +19,22 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.beans.BeanUtils;
 
+import com.example.demo.dto.request.WarehouseDTO;
+import com.example.demo.dto.response.UserDTO;
+
+import ch.qos.logback.core.joran.util.beans.BeanUtil;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @DynamicUpdate
 @DynamicInsert
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Table(name = "Warehouse")
 public class Warehouse implements Serializable {
@@ -40,6 +52,7 @@ public class Warehouse implements Serializable {
 	@Column(name = "Address", nullable = false)
 	private String address;
 
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false, referencedColumnName = "userID")
 	private User manager;
@@ -47,5 +60,9 @@ public class Warehouse implements Serializable {
 	@OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	List<Shelf> shelves;
 
-	// Constructors, getters and setters
+	public void addShelf(Shelf shelf) {
+		shelves.add(shelf);
+		
+	}
+
 }

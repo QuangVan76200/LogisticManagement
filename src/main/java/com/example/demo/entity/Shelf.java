@@ -1,7 +1,9 @@
 package com.example.demo.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -18,6 +20,8 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.example.demo.dto.request.ShelfDTO;
+
 import lombok.Data;
 
 @Entity
@@ -28,27 +32,30 @@ import lombok.Data;
 public class Shelf implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
-	 @Id
-	  @GeneratedValue(strategy = GenerationType.IDENTITY)
-	  @Column(name = "ShelfID")
-	  private Long shelfId;
 
-	  @Column(name = "Name", nullable = false)
-	  private String name;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "ShelfID")
+	private Long shelfId;
 
-	  @Column(name = "Location", nullable = false)
-	  private String location;
+	@Column(name = "Name", nullable = false)
+	private String name;
 
-	  @Column(name = "Capacity", nullable = false)
-	  private Integer capacity;
-	  
-	  @OneToMany(mappedBy = "shelf", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	  private List<Stock> listStock;
-	  
-	  
-	  @ManyToOne
-	  @JoinColumn(name ="WarehouseID")
-	  private Warehouse warehouse;
+	@Column(name = "Location", nullable = false)
+	private String location;
+
+	@Column(name = "Capacity", nullable = false)
+	private Integer capacity;
+
+	@OneToMany(mappedBy = "shelf", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Stock> listStock = new ArrayList<>();
+
+	@ManyToOne
+	@JoinColumn(name = "WarehouseID")
+	private Warehouse warehouse;
+
+	public void addStock(Stock stock) {
+		listStock.add(stock);
+	}
 
 }

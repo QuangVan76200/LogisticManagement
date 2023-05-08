@@ -95,6 +95,7 @@ public class UserServiceImpl implements IUserService {
 		log.info("inside signup ", signUpFormDTO);
 		try {
 			if (validateMap(signUpFormDTO)) {
+				System.out.println("Log Form "+ signUpFormDTO.toString());
 				User user = userDao.findByEmail(signUpFormDTO.getRequestMap().get("email"));
 				if (Objects.isNull(user)) {
 					userDao.save(getUserFromMap(signUpFormDTO));
@@ -161,6 +162,11 @@ public class UserServiceImpl implements IUserService {
 				Role roleUser = roleServiceImpl.findByRoleName(RoleName.CUSTOMER)
 						.orElseThrow(() -> new RuntimeException("Role not found"));
 				setRoles.add(roleUser);
+				break;
+			case "STAFF":
+				Role roleStaff = roleServiceImpl.findByRoleName(RoleName.STAFF)
+						.orElseThrow(() -> new RuntimeException("Role not found"));
+				setRoles.add(roleStaff);
 				break;
 			default:
 				Role roleManager = roleServiceImpl.findByRoleName(RoleName.MANAGER)

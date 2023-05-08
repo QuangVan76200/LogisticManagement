@@ -16,4 +16,5 @@ public interface IStockDao extends JpaRepository<Stock, Long> {
 
 //	@Query(value = "")
 //	 List<StockDTO> findStockByProductAndDate(@Param("productCode") String productCode, @Param("date") LocalDateTime date);
+
 }

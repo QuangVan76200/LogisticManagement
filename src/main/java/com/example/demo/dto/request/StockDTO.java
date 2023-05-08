@@ -18,7 +18,6 @@ public class StockDTO {
 		this.stockId = stock.getStockId();
 		this.product = new ProductDTO(stock.getProduct());
 		this.shelf = new ShelfDTO(stock.getShelf());
-		this.quantity = stock.getQuantity();
 	}
 
 	// Getters and setters

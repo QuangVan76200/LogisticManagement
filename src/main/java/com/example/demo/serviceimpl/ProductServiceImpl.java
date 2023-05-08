@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -20,15 +21,18 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.common.FileUploadService;
 import com.example.demo.constants.CafeConstants;
 import com.example.demo.dao.IProductDao;
+import com.example.demo.dao.IShelfDao;
 import com.example.demo.dao.IStockDao;
 import com.example.demo.dao.impl.ProductRepositoryImpl;
 import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.dto.request.ProductSearchCriteriaDTO;
 import com.example.demo.entity.Product;
+import com.example.demo.entity.Shelf;
 import com.example.demo.entity.Stock;
 import com.example.demo.exception.FileMissingException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.service.IProductService;
+import com.example.demo.service.IShelfService;
 import com.example.demo.utils.CafeUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +53,9 @@ public class ProductServiceImpl implements IProductService {
 
 	@Autowired
 	private FileUploadService fileUploadService;
+
+	@Autowired
+	private IShelfDao shelfDao;
 
 	@Override
 	public ProductDTO findById(Long id) {
@@ -93,19 +100,46 @@ public class ProductServiceImpl implements IProductService {
 				newProduct.setImages(imageUrls);
 			}
 
-			log.info("Test Log " + newProduct.getImages().size());
-
 			String newAvatar = fileUploadService.uploadFile(productDto.getAvatar());
 
 			newProduct.setAvatar(StringUtils.isBlank(newAvatar)
 					? new FileMissingException("Product image cannot be blank", HttpStatus.BAD_REQUEST).toString()
 					: newAvatar);
+			int quantity = productDto.getQuantity();
 
-			// Thêm Stock mới vào danh sách listStock của sản phẩm
-			Stock newStock = new Stock();
-			newStock.setQuantity(productDto.getQuantity()); // Số lượng hàng tồn kho
-//			newStock.setShelf(shelfService.getShelfById(productDto.getShelfId())); // Tủ chứa sản phẩm
-			newProduct.addStock(newStock);
+			// Lấy những Shelf có số lượng Stock chưa đẩy 10
+			List<Shelf> availableShelves = shelfDao.findAvailableShelves();
+
+			if (availableShelves.isEmpty()) {
+				throw new Exception("Can't find empty shelves or enough room to store products.");
+			}
+
+			for (Shelf shelf : availableShelves) {
+				int availableSpace = getAvalibleCapacity(shelf);
+
+				if (availableSpace <= 10) {
+					for (int i = 1; i <= availableSpace; i++) {
+						Stock newStock = new Stock();
+						newStock.setProduct(newProduct);
+						newStock.setShelf(shelf);
+						shelf.addStock(newStock);
+						stockDao.save(newStock);
+						quantity--;
+
+					}
+					if (shelf.getListStock().size() == 10) {
+						break;
+					}
+
+				}
+				if (quantity == 0) {
+					break;
+				}
+
+				System.out.println(
+						"Thêm " + quantity + " sản phẩm " + productDto.getName() + " vào kệ " + shelf.getName());
+
+			}
 
 			Product savedProduct = productDao.save(newProduct);
 
@@ -125,6 +159,15 @@ public class ProductServiceImpl implements IProductService {
 		}
 		return CafeUtils.getResponseData(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.BAD_REQUEST, null);
 
+	}
+
+	public int getAvalibleCapacity(Shelf shelf) {
+		int usedSpace = 0;
+
+		List<Stock> listStockUsed = shelf.getListStock().stream().filter(Objects::nonNull).collect(Collectors.toList());
+		usedSpace = listStockUsed.size();
+
+		return 10 - usedSpace;
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.enums.MeasurementUnit;
 
 import lombok.Data;

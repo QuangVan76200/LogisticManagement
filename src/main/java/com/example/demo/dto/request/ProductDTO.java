@@ -7,7 +7,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.entity.Product;
+import com.example.demo.entity.Stock;
 import com.example.demo.enums.MeasurementUnit;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,7 +28,8 @@ public class ProductDTO {
 	private int quantity;
 	private BigDecimal weight;
 	private MeasurementUnit measurementUnit;
-
+	private List<Stock> listStock;
+	
 	private MultipartFile avatar;
 
 	private List<MultipartFile> images;
