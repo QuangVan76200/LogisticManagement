@@ -87,6 +87,7 @@ public class ProductServiceImpl implements IProductService {
 	 *         code HttpStatus.BAD_REQUEST.
 	 */
 	@Override
+	@Transactional
 	public ResponseEntity<?> newProduct(ProductDTO productDto) {
 		log.info("inside newProduct ", productDto);
 		try {
@@ -107,14 +108,16 @@ public class ProductServiceImpl implements IProductService {
 					: newAvatar);
 			int quantity = productDto.getQuantity();
 
-			Product savedProduct = productDao.save(newProduct);
-
 			// Lấy những Shelf có số lượng Stock chưa đẩy 10
 			List<Shelf> availableShelves = shelfDao.findAvailableShelves();
 
 			if (availableShelves.isEmpty()) {
 				throw new Exception("Can't find empty shelves or enough room to store products.");
 			}
+
+			List<Stock> listStock = new ArrayList<>();
+
+			Product savedProduct = productDao.save(newProduct);
 
 			boolean isShelfFound = false;
 			for (Shelf shelf : availableShelves) {
@@ -126,10 +129,13 @@ public class ProductServiceImpl implements IProductService {
 						Stock newStock = new Stock();
 						newStock.setProduct(newProduct);
 						newStock.setShelf(shelf);
-						shelf.addStock(newStock);
+
 						stockDao.save(newStock);
+						listStock.add(newStock);
+
 						quantity--;
 					}
+
 					isShelfFound = true;
 					if (quantity == 0) {
 						break;
@@ -137,18 +143,15 @@ public class ProductServiceImpl implements IProductService {
 				}
 			}
 
+			log.info("Size List", listStock.size());
+
 			if (!isShelfFound || quantity > 0) {
 				throw new Exception("Can't find enough space to store all products.");
 			}
 
-			List<String> imageUrls = new ArrayList<>();
+			newProduct.setListStock(listStock);
 
-			for (MultipartFile image : productDto.getImages()) {
-				String imageUrl = fileUploadService.uploadFile(image);
-				imageUrls.add(imageUrl);
-			}
-
-			ProductDTO savedProductDTO = new ProductDTO();
+			ProductDTO savedProductDTO = new ProductDTO(newProduct);
 			BeanUtils.copyProperties(savedProduct, savedProductDTO);
 
 			return CafeUtils.getResponseData("create Product successfully", HttpStatus.OK, savedProductDTO);
