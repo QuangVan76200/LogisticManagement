@@ -107,6 +107,8 @@ public class ProductServiceImpl implements IProductService {
 					: newAvatar);
 			int quantity = productDto.getQuantity();
 
+			Product savedProduct = productDao.save(newProduct);
+
 			// Lấy những Shelf có số lượng Stock chưa đẩy 10
 			List<Shelf> availableShelves = shelfDao.findAvailableShelves();
 
@@ -114,34 +116,30 @@ public class ProductServiceImpl implements IProductService {
 				throw new Exception("Can't find empty shelves or enough room to store products.");
 			}
 
+			boolean isShelfFound = false;
 			for (Shelf shelf : availableShelves) {
 				int availableSpace = getAvalibleCapacity(shelf);
 
-				if (availableSpace <= 10) {
-					for (int i = 1; i <= availableSpace; i++) {
+				if (availableSpace > 0) {
+					int spaceToUse = Math.min(availableSpace, quantity);
+					for (int i = 1; i <= spaceToUse; i++) {
 						Stock newStock = new Stock();
 						newStock.setProduct(newProduct);
 						newStock.setShelf(shelf);
 						shelf.addStock(newStock);
 						stockDao.save(newStock);
 						quantity--;
-
 					}
-					if (shelf.getListStock().size() == 10) {
+					isShelfFound = true;
+					if (quantity == 0) {
 						break;
 					}
-
 				}
-				if (quantity == 0) {
-					break;
-				}
-
-				System.out.println(
-						"Thêm " + quantity + " sản phẩm " + productDto.getName() + " vào kệ " + shelf.getName());
-
 			}
 
-			Product savedProduct = productDao.save(newProduct);
+			if (!isShelfFound || quantity > 0) {
+				throw new Exception("Can't find enough space to store all products.");
+			}
 
 			List<String> imageUrls = new ArrayList<>();
 
