@@ -2,8 +2,10 @@ package com.example.demo.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -12,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.DynamicInsert;
@@ -47,5 +50,8 @@ public class Stock implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ShelfID", nullable = false)
 	private Shelf shelf;
+
+	@OneToMany(mappedBy = "stock", cascade = CascadeType.ALL)
+	private Set<WareTransactionDetail> transactionDetails;
 
 }

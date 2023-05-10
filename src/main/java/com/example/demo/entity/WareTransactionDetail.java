@@ -33,15 +33,13 @@ public class WareTransactionDetail implements Serializable {
 	private Long transactionDetailId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "TransactionID", nullable = false, referencedColumnName = "TransactionID")
+	@JoinColumn(name = "TransactionID", nullable = false)
 	private WareTransaction wareTransaction;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "StockID", nullable = false, referencedColumnName = "StockID")
 	private Stock stock;
 
-	@Column(name = "Quantity", nullable = false)
-	private Integer quantity;
 
 	// constructors, getters, and setters
 }

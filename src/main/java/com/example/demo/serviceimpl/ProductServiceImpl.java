@@ -2,8 +2,9 @@ package com.example.demo.serviceimpl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -16,24 +17,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.common.FileUploadService;
 import com.example.demo.constants.CafeConstants;
 import com.example.demo.dao.IProductDao;
 import com.example.demo.dao.IShelfDao;
 import com.example.demo.dao.IStockDao;
+import com.example.demo.dao.IUSerDao;
+import com.example.demo.dao.IWareTransactionDao;
+import com.example.demo.dao.IwareTransactionDetailDao;
 import com.example.demo.dao.impl.ProductRepositoryImpl;
 import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.dto.request.ProductSearchCriteriaDTO;
 import com.example.demo.entity.Product;
 import com.example.demo.entity.Shelf;
 import com.example.demo.entity.Stock;
+import com.example.demo.entity.User;
+import com.example.demo.entity.WareTransaction;
+import com.example.demo.entity.WareTransactionDetail;
+import com.example.demo.enums.WareTransactionType;
 import com.example.demo.exception.FileMissingException;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.jwt.JWTFilter;
 import com.example.demo.service.IProductService;
-import com.example.demo.service.IShelfService;
 import com.example.demo.utils.CafeUtils;
+import com.example.demo.utils.DateUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,6 +64,21 @@ public class ProductServiceImpl implements IProductService {
 
 	@Autowired
 	private IShelfDao shelfDao;
+
+	@Autowired
+	private IWareTransactionDao wareTransactionDao;
+
+	@Autowired
+	private IwareTransactionDetailDao detailDao;
+
+	@Autowired
+	private IUSerDao userDao;
+
+	@Autowired
+	private JWTFilter jwtFilter;
+
+	@Autowired
+	DateUtils dateUtils;
 
 	@Override
 	public ProductDTO findById(Long id) {
@@ -151,6 +174,27 @@ public class ProductServiceImpl implements IProductService {
 
 			newProduct.setListStock(listStock);
 
+			String userName = jwtFilter.getCurrentUser();
+			User createTransactionUser = getCuurentUser(userName);
+
+			WareTransaction wareTransaction = new WareTransaction();
+			wareTransaction.setUser(createTransactionUser);
+			wareTransaction.setTransactionDate(dateUtils.convertDateToLocalDateTime(new Date()));
+			wareTransaction.setTransactionType(WareTransactionType.IMPORT);
+			wareTransaction.setTransactionDetails(new ArrayList<>());
+
+			for (Stock stock : listStock) {
+				WareTransactionDetail detail = new WareTransactionDetail();
+				detail.setWareTransaction(wareTransaction);
+				detail.setStock(stock);
+//				detail.setQuantity(quantityStock);
+				// WareTransactionDetail
+
+				wareTransaction.getTransactionDetails().add(detail);
+			}
+
+			wareTransaction = wareTransactionDao.save(wareTransaction);
+
 			ProductDTO savedProductDTO = new ProductDTO(newProduct);
 			BeanUtils.copyProperties(savedProduct, savedProductDTO);
 
@@ -162,6 +206,7 @@ public class ProductServiceImpl implements IProductService {
 
 	}
 
+	/** Returns the empty space in List<Stock> contained in the Shelf **/
 	public int getAvalibleCapacity(Shelf shelf) {
 		int usedSpace = 0;
 
@@ -175,6 +220,10 @@ public class ProductServiceImpl implements IProductService {
 	public void deleteById(Long id) {
 		productDao.deleteById(id);
 
+	}
+
+	public User getCuurentUser(String userName) {
+		return userDao.findByUserName(userName).orElse(null);
 	}
 
 	@Override
