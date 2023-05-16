@@ -69,9 +69,6 @@ public class ProductServiceImpl implements IProductService {
 	private IWareTransactionDao wareTransactionDao;
 
 	@Autowired
-	private IwareTransactionDetailDao detailDao;
-
-	@Autowired
 	private IUSerDao userDao;
 
 	@Autowired
@@ -131,7 +128,6 @@ public class ProductServiceImpl implements IProductService {
 					: newAvatar);
 			int quantity = productDto.getQuantity();
 
-			// Lấy những Shelf có số lượng Stock chưa đẩy 10
 			List<Shelf> availableShelves = shelfDao.findAvailableShelves();
 
 			if (availableShelves.isEmpty()) {
@@ -195,14 +191,16 @@ public class ProductServiceImpl implements IProductService {
 
 			wareTransaction = wareTransactionDao.save(wareTransaction);
 
-			ProductDTO savedProductDTO = new ProductDTO(newProduct);
+			com.example.demo.dto.response.ProductDTO savedProductDTO = new com.example.demo.dto.response.ProductDTO(
+					newProduct);
 			BeanUtils.copyProperties(savedProduct, savedProductDTO);
 
 			return CafeUtils.getResponseData("create Product successfully", HttpStatus.OK, savedProductDTO);
 		} catch (Exception e) {
 			log.error("Error! An error occurred. Please try again later: " + e.getMessage(), e);
+
 		}
-		return CafeUtils.getResponseData(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.BAD_REQUEST, null);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CafeConstants.SOMETHING_WENT_WRONG);
 
 	}
 

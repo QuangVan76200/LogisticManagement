@@ -1,6 +1,7 @@
 package com.example.demo.dto.request;
 
 import com.example.demo.entity.Stock;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -8,8 +9,8 @@ import lombok.Data;
 public class StockDTO {
 	private Long stockId;
 	private ProductDTO product;
+	@JsonIgnore
 	private ShelfDTO shelf;
-	private Integer quantity;
 
 	public StockDTO() {
 	}

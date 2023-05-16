@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,6 +10,8 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -46,11 +49,13 @@ public class Order implements Serializable {
 	private User user;
 
 	@Column(name = "OrderDate", nullable = false)
-	private Date orderDate;
+	private LocalDateTime orderDate;
 
+	@Enumerated(EnumType.STRING)
 	@Column(name = "Status", nullable = false, length = 20)
 	private OrderStatusType status;
 
+	@Enumerated(EnumType.STRING)
 	@Column(name = "TypeOrder", nullable = false, length = 50)
 	private OrderType typeOrder;
 

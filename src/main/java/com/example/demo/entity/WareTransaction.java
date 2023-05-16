@@ -3,11 +3,12 @@ package com.example.demo.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -45,6 +46,7 @@ public class WareTransaction implements Serializable {
 	@Column(name = "TransactionDate", nullable = false)
 	private LocalDateTime transactionDate;
 
+	@Enumerated(EnumType.STRING)
 	@Column(name = "TransactionType", nullable = false)
 	private WareTransactionType transactionType;
 

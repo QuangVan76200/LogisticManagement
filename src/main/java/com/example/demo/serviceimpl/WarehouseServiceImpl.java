@@ -44,6 +44,7 @@ public class WarehouseServiceImpl implements IWarehouseService {
 	@Override
 	public WarehouseDTO findById(Long id) {
 		Warehouse warehouse = warehouseDao.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+		System.out.println("print warehouse "+ warehouse);
 		return new WarehouseDTO(warehouse);
 	}
 

@@ -1,19 +1,12 @@
-package com.example.demo.dto.request;
+package com.example.demo.dto.response;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
-
-import org.springframework.mock.web.MockMultipartFile;
-
+import com.example.demo.dto.request.StockDTO;
 import com.example.demo.entity.Product;
-import com.example.demo.entity.Stock;
 import com.example.demo.enums.MeasurementUnit;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -35,13 +28,11 @@ public class ProductDTO {
 	private BigDecimal weight;
 	private MeasurementUnit measurementUnit;
 	@JsonIgnore
-	private List<StockDTO> listStock = new ArrayList<>();
+	private List<StockDTO> listStock;
 
-	@JsonIgnore
-	private MultipartFile avatar;
+	private String avatar;
 
-	@JsonIgnore
-	private List<MultipartFile> images;
+	private List<String> images;
 
 	public ProductDTO(Product product) {
 		this.productId = product.getProductId();
@@ -52,21 +43,9 @@ public class ProductDTO {
 		this.quantity = product.getQuantity();
 		this.weight = product.getWeight();
 		this.measurementUnit = product.getMeasurementUnit();
-		byte[] avatarBytes = product.getAvatar().getBytes();
-
-		Resource avatarResource = new ByteArrayResource(avatarBytes);
-		MultipartFile avatarMultipart = new MockMultipartFile("filename", avatarBytes);
-		this.avatar = avatarMultipart;
-
-
-	}
-
-	public void setImages(List<MultipartFile> images) {
-		this.images = images;
-	}
-
-	public List<MultipartFile> getImages() {
-		return images;
+		this.avatar = product.getAvatar();
+		this.images = product.getImages();
+		this.listStock = product.getListStock().stream().map(StockDTO::new).collect(Collectors.toList());
 	}
 
 }

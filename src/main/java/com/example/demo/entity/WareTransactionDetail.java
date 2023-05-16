@@ -23,23 +23,23 @@ import lombok.Data;
 @DynamicInsert
 @Data
 @Table(name = "WareTransactionDetail")
-public class WareTransactionDetail implements Serializable {
-
-	private static final long serialVersionUID = 1L;
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "TransactionDetailID")
-	private Long transactionDetailId;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "TransactionID", nullable = false)
-	private WareTransaction wareTransaction;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "StockID", nullable = false, referencedColumnName = "StockID")
-	private Stock stock;
-
-
-	// constructors, getters, and setters
-}
+	public class WareTransactionDetail implements Serializable {
+	
+		private static final long serialVersionUID = 1L;
+	
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@Column(name = "TransactionDetailID")
+		private Long transactionDetailId;
+	
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "TransactionID", nullable = false)
+		private WareTransaction wareTransaction;
+	
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "StockID", nullable = false, referencedColumnName = "StockID")
+		private Stock stock;
+	
+	
+		// constructors, getters, and setters
+	}
