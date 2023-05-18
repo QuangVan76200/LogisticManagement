@@ -78,10 +78,11 @@ public class WareTransactionController {
 	}
 
 	@GetMapping(path = "/findByUserName/{userName}")
-	ResponseEntity<?> listWarehouseByUserName(@PathVariable String userName) {
+	ResponseEntity<?> listWarehouseByUserName(@PathVariable String userName, String filePath) {
 		try {
 			if (jwtFilter.isStaff() || jwtFilter.isManager() || jwtFilter.isCustomer()) {
-				List<WareTransactionDTO> listAllProduct = wareTransactionService.findByUser(userName);
+				List<WareTransactionDTO> listAllProduct = wareTransactionService.findByUserAndExportData(userName,
+						filePath);
 				return CafeUtils.getResponseData("succesfully", HttpStatus.OK, listAllProduct);
 			} else {
 				return new ResponseEntity<List<WareTransactionDTO>>(new ArrayList<>(), HttpStatus.UNAUTHORIZED);

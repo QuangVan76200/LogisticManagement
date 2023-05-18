@@ -15,6 +15,6 @@ public interface IWareTransactionService {
 
 	void deleteById(Long id);
 
-	List<WareTransactionDTO> findByUser(String userName);
+	List<WareTransactionDTO> findByUserAndExportData(String userName, String filePath);
 
 }

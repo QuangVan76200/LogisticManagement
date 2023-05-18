@@ -1,6 +1,5 @@
 package com.example.demo.serviceimpl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,25 +7,26 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.dao.IUSerDao;
+import com.example.demo.common.ExcelExporter;
 import com.example.demo.dao.IWareTransactionDao;
-import com.example.demo.dao.IwareTransactionDetailDao;
 import com.example.demo.dto.request.WareTransactionRequestDTO;
 import com.example.demo.dto.response.UserDTO;
 import com.example.demo.dto.response.WareTransactionDTO;
-import com.example.demo.dto.response.WareTransactionDetailDTO;
 import com.example.demo.entity.User;
 import com.example.demo.entity.WareTransaction;
-import com.example.demo.entity.WareTransactionDetail;
 import com.example.demo.exception.ResourceNotFoundException;
-import com.example.demo.jwt.JWTFilter;
 import com.example.demo.service.IWareTransactionService;
 
 @Service
 public class WareTransactionServiceImpl implements IWareTransactionService {
 
+	private final String STRING_PATH = "E:\\TraiiningHTML\\ProjectE-commerce\\export_file";
+
 	@Autowired
 	private IWareTransactionDao transactionDao;
+
+	@Autowired
+	private ExcelExporter excelUtils;
 
 	@Override
 	public WareTransactionDTO findById(Long id) {
@@ -79,10 +79,20 @@ public class WareTransactionServiceImpl implements IWareTransactionService {
 		return wareTransactionDTO;
 	}
 
-	@Override
-	public List<WareTransactionDTO> findByUser(String userName) {
-		return transactionDao.findByUserUserName(userName).stream().map(warehouse -> new WareTransactionDTO(warehouse))
-				.collect(Collectors.toList());
-	}
+		@Override
+		public List<WareTransactionDTO> findByUserAndExportData(String userName, String filePath) {
+	
+			List<WareTransactionDTO> transactions = transactionDao.findByUserUserName(userName).stream()
+					.map(warehouse -> new WareTransactionDTO(warehouse)).collect(Collectors.toList());
+	
+			try {
+				filePath = STRING_PATH;
+				ExcelExporter.exportToExcel(transactions, filePath);
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
+			return transactions;
+		}
 
 }
