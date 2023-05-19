@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.constants.CafeConstants;
 import com.example.demo.dao.IOrderDao;
-import com.example.demo.dto.response.OrderDTO;
+import com.example.demo.dto.request.OrderRequestDTO;
 import com.example.demo.jwt.JWTFilter;
 import com.example.demo.service.IOrderService;
 import com.example.demo.utils.CafeUtils;
@@ -38,7 +38,7 @@ public class OrderController {
 	JWTFilter jwtFilter;
 
 	@PostMapping(path = "/newOrder")
-	public ResponseEntity<?> newOrder(@RequestBody(required = true) OrderDTO orderDTO) {
+	public ResponseEntity<?> newOrder(@RequestBody(required = true) OrderRequestDTO orderDTO) {
 		log.info("Inside newOrderController. OrderDTO: {}", orderDTO);
 		try {
 			if (jwtFilter.isStaff() || jwtFilter.isManager()) {

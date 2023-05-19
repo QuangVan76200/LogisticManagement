@@ -35,6 +35,7 @@ import com.example.demo.entity.Stock;
 import com.example.demo.entity.User;
 import com.example.demo.entity.WareTransaction;
 import com.example.demo.entity.WareTransactionDetail;
+import com.example.demo.enums.ProductStatus;
 import com.example.demo.enums.WareTransactionType;
 import com.example.demo.exception.FileMissingException;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -133,6 +134,10 @@ public class ProductServiceImpl implements IProductService {
 			if (availableShelves.isEmpty()) {
 				throw new Exception("Can't find empty shelves or enough room to store products.");
 			}
+			
+			newProduct.setProductStatus(ProductStatus.IN_STOCK);
+
+			newProduct.setRerceiptDate(dateUtils.convertDateToLocalDateTime(new Date()));
 
 			List<Stock> listStock = new ArrayList<>();
 
@@ -146,6 +151,7 @@ public class ProductServiceImpl implements IProductService {
 					int spaceToUse = Math.min(availableSpace, quantity);
 					for (int i = 1; i <= spaceToUse; i++) {
 						Stock newStock = new Stock();
+						newStock.setLastUpdateDate(dateUtils.convertDateToLocalDateTime(new Date()));
 						newStock.setProduct(newProduct);
 						newStock.setShelf(shelf);
 

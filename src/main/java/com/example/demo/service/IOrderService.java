@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 
+import com.example.demo.dto.request.OrderRequestDTO;
 import com.example.demo.dto.response.OrderDTO;
 
 public interface IOrderService {
@@ -14,7 +15,7 @@ public interface IOrderService {
 
 	List<OrderDTO> findAll();
 
-	ResponseEntity<?> newOrder(OrderDTO orderDTO);
+	ResponseEntity<?> newOrder(OrderRequestDTO orderDTO);
 
 	public List<OrderDTO> listOrderByOrderDate(Date date);
 

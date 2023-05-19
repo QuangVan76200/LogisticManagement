@@ -36,9 +36,6 @@ public class OrderItem implements Serializable {
 	@Column(name = "order_item_id")
 	private Long id;
 	
-	@Column(name = "TotalAmount", nullable = false)
-	private BigDecimal totalAmount;
-	
 	private int quantity;
 	
 	@ManyToOne(fetch = FetchType.LAZY)

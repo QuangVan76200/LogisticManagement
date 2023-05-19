@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,9 @@ public class Stock implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ProductID", nullable = false)
 	private Product product;
+	
+	@Column(name = "lastUpdateDate", nullable = false)
+	private LocalDateTime lastUpdateDate;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ShelfID", nullable = false)

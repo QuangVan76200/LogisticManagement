@@ -9,8 +9,8 @@ import com.example.demo.entity.Product;
 
 @Repository
 public interface IProductDao extends JpaRepository<Product, Long> {
-	
+
 //	@Query(value = "select * from product where name = :name")
-	Optional<Product> findByProductCode( String code);
+	Product findByProductCode(String code);
 
 }

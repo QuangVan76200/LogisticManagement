@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -29,6 +30,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.enums.MeasurementUnit;
+import com.example.demo.enums.ProductStatus;
 
 import lombok.Data;
 
@@ -66,17 +68,24 @@ public class Product implements Serializable {
 	private MeasurementUnit measurementUnit;
 
 	private String productCode;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name = "product_status")
+	private ProductStatus productStatus;
 
 	@Lob
 	@Column(name = "avatar")
 	private String avatar;
+	
+	@Column(name = "rerceiptDate", nullable = false)
+	private LocalDateTime rerceiptDate;
 
 	@ElementCollection
 	@Column(name = "images")
 	private List<String> images;
 
 	@OneToMany(mappedBy = "productId", cascade = CascadeType.ALL)
-	private Set<OrderItem> orderItem;
+	private List<OrderItem> orderItem;
 
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
 	private List<Stock> listStock;

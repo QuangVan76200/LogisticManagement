@@ -3,8 +3,7 @@ package com.example.demo.entity;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -58,12 +57,14 @@ public class Order implements Serializable {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "TypeOrder", nullable = false, length = 50)
 	private OrderType typeOrder;
+	
+	private BigDecimal totalAmount;
 
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-	private Set<Invoice> invoices;
+	private List<Invoice> invoices;
 	
 	@OneToMany(mappedBy = "orderId", cascade = CascadeType.ALL)
-	private Set<OrderItem> orderItem;
+	private List<OrderItem> orderItem;
 
 	public void addInvoice(Invoice invoice) {
 		invoices.add(invoice);

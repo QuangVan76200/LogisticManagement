@@ -19,24 +19,29 @@ import org.springframework.stereotype.Service;
 import com.example.demo.dao.IOrderDao;
 import com.example.demo.dao.IOrderItemDao;
 import com.example.demo.dao.IProductDao;
+import com.example.demo.dao.IStockDao;
 import com.example.demo.dao.IUSerDao;
+import com.example.demo.dao.IWareTransactionDao;
 import com.example.demo.dao.InvoiceDao;
 import com.example.demo.dto.request.OrderItemDTO;
+import com.example.demo.dto.request.OrderRequestDTO;
 import com.example.demo.dto.response.OrderDTO;
-import com.example.demo.dto.response.StockDTO;
-import com.example.demo.dto.response.UserDTO;
 import com.example.demo.entity.Invoice;
 import com.example.demo.entity.Order;
 import com.example.demo.entity.OrderItem;
 import com.example.demo.entity.Product;
 import com.example.demo.entity.Stock;
 import com.example.demo.entity.User;
+import com.example.demo.entity.WareTransaction;
+import com.example.demo.entity.WareTransactionDetail;
 import com.example.demo.enums.InvoiceStatusType;
 import com.example.demo.enums.OrderStatusType;
+import com.example.demo.enums.ProductStatus;
+import com.example.demo.enums.WareTransactionType;
 import com.example.demo.jwt.JWTFilter;
-import com.example.demo.jwt.JWTUtil;
 import com.example.demo.service.IOrderService;
 import com.example.demo.utils.CafeUtils;
+import com.example.demo.utils.DateUtils;
 import com.example.demo.utils.EmailUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,28 +52,34 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderServiceImpl implements IOrderService {
 
 	@Autowired
-	IOrderDao orderDao;
+	private IOrderDao orderDao;
 
 	@Autowired
-	InvoiceDao invoiceDao;
+	private InvoiceDao invoiceDao;
 
 	@Autowired
-	EmailUtils emailUtils;
+	private EmailUtils emailUtils;
 
 	@Autowired
-	JWTUtil jwtUtil;
+	private IUSerDao userDao;
 
 	@Autowired
-	JWTFilter jwtFilter;
+	private IProductDao productDao;
 
 	@Autowired
-	IUSerDao userDao;
+	private IOrderItemDao oderItemDao;
 
 	@Autowired
-	IProductDao productDao;
+	private IStockDao stockDao;
 
 	@Autowired
-	IOrderItemDao oderItemDao;
+	private JWTFilter jwtFilter;
+
+	@Autowired
+	DateUtils dateUtils;
+
+	@Autowired
+	private IWareTransactionDao wareTransactionDao;
 
 	@Override
 	public OrderDTO findById(Long id) {
@@ -82,8 +93,13 @@ public class OrderServiceImpl implements IOrderService {
 		return null;
 	}
 
+	public User getCuurentUser(String userName) {
+		return userDao.findByUserName(userName).orElse(null);
+	}
+
 	@Override
-	public ResponseEntity<?> newOrder(OrderDTO orderDTO) {
+	@Transactional
+	public ResponseEntity<?> newOrder(OrderRequestDTO orderDTO) {
 
 		validateOrderDTO(orderDTO);
 
@@ -98,58 +114,61 @@ public class OrderServiceImpl implements IOrderService {
 		} else if (!user.get().getStatus()) {
 			return CafeUtils.getResponseData("User is not active", HttpStatus.BAD_REQUEST, null);
 		}
-
+		newOrder.setOrderItem(new ArrayList<>(orderDTO.getQuantity()));
 		newOrder.setUser(user.get());
 
-		List<Product> products = new ArrayList<>();
+		List<Stock> stocksToRemove = new ArrayList<>();
 
-		for (OrderItemDTO item : orderDTO.getOrderItems()) {
-			Optional<Product> product = productDao.findByProductCode(item.getProductId().getProductCode());
-			if (product.isEmpty()) {
-				return CafeUtils.getResponse("Product Not Found", HttpStatus.NOT_FOUND);
-			} else if (product.get().getListStock().stream().mapToInt(Stock::getQuantity).sum() < item.getQuantity()) {
-				return CafeUtils.getResponseData("Product out of stock", HttpStatus.BAD_REQUEST, null);
-			}
-			products.add(product.get());
+		Product product = productDao.findByProductCode(orderDTO.getProductCode());
+		if (product == null) {
+			return CafeUtils.getResponse("Product Not Found", HttpStatus.NOT_FOUND);
+		} else if (product.getListStock().size() < orderDTO.getQuantity()) {
+			return CafeUtils.getResponseData("Product out of stock", HttpStatus.BAD_REQUEST, null);
 		}
+		for (int i = 1; i <= orderDTO.getQuantity(); i++) {
+			OrderItem orderItem = new OrderItem();
+			orderItem.setQuantity(i);
+			orderItem.setOrderId(newOrder);
+			orderItem.setProductId(product);
+
+			newOrder.getOrderItem().add(orderItem);
+
+			Stock stock = product.getListStock().remove(0);
+			stocksToRemove.add(stock);
+		}
+
+		String userName = jwtFilter.getCurrentUser();
+		User createTransactionUser = getCuurentUser(userName);
+
+		WareTransaction wareTransaction = new WareTransaction();
+		wareTransaction.setUser(createTransactionUser);
+		wareTransaction.setTransactionDate(dateUtils.convertDateToLocalDateTime(new Date()));
+		wareTransaction.setTransactionType(WareTransactionType.EXPORT);
+		wareTransaction.setTransactionDetails(new ArrayList<>());
+
+		for (Stock stock : stocksToRemove) {
+			WareTransactionDetail detail = new WareTransactionDetail();
+			detail.setWareTransaction(wareTransaction);
+			detail.setStock(stock);
+
+			wareTransaction.getTransactionDetails().add(detail);
+		}
+
+		wareTransaction = wareTransactionDao.save(wareTransaction);
+
+		stockDao.deleteAll(stocksToRemove);
+
+		if (product.getListStock().isEmpty()) {
+			product.setProductStatus(ProductStatus.OUT_OF_STOCK);
+		}
+
+		productDao.save(product);
 
 		Order savedOrder = orderDao.save(newOrder);
 
 		sendOrderConfirmationEmail(savedOrder); // Send order confirmation email
 
-		// Update product stock and create order items
-		List<OrderItem> orderItems = new ArrayList<>();
-		for (int i = 0; i < products.size(); i++) {
-			Product product = products.get(i);
-			OrderItemDTO itemDto = orderDTO.getOrderItems().get(i);
-
-			int quantityRemaining = itemDto.getQuantity();
-
-			for (Stock stock : product.getListStock()) {
-				int quantityInStock = stock.getQuantity();
-				if (quantityInStock <= 0) {
-					break;
-				}
-				if (quantityInStock >= quantityRemaining) {
-					stock.setQuantity(quantityInStock - quantityRemaining);
-					quantityRemaining = 0;
-				} else {
-					stock.setQuantity(0);
-					quantityRemaining -= quantityInStock;
-				}
-			}
-			OrderItem orderItem = new OrderItem();
-			orderItem.setOrderId(savedOrder);
-			orderItem.setProductId(product);
-			orderItem.setQuantity(itemDto.getQuantity());
-			orderItems.add(orderItem);
-
-		}
-
-		oderItemDao.saveAll(orderItems);
-
-		OrderDTO newOrderDTO = new OrderDTO();
-		BeanUtils.copyProperties(savedOrder, newOrderDTO);
+		OrderDTO newOrderDTO = new OrderDTO(savedOrder);
 
 		return CafeUtils.getResponseData("Create order successfully", HttpStatus.OK, newOrderDTO);
 
@@ -186,13 +205,13 @@ public class OrderServiceImpl implements IOrderService {
 
 	@Override
 	public void processOrder(Long orderId) {
-	    Order order = orderDao.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
+		Order order = orderDao.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
 
-	    if (order.getStatus() == OrderStatusType.Processed || order.getInvoices() != null) {
-	        return;
-	    }
+		if (order.getStatus() == OrderStatusType.Processed || order.getInvoices() != null) {
+			return;
+		}
 
-	    sendOrderConfirmationEmail(order);
+		sendOrderConfirmationEmail(order);
 	}
 
 	@Override
@@ -225,7 +244,7 @@ public class OrderServiceImpl implements IOrderService {
 		return null;
 	}
 
-	private void validateOrderDTO(OrderDTO orderDTO) {
+	private void validateOrderDTO(OrderRequestDTO orderDTO) {
 		log.info("inside validate product", orderDTO);
 
 		if (orderDTO.getOrderType() == null) {
@@ -236,6 +255,12 @@ public class OrderServiceImpl implements IOrderService {
 		}
 		if (orderDTO.getOrderStatus() == null) {
 			throw new IllegalArgumentException("OrderStatus cannot be null. Please select an order status.");
+		}
+		if (orderDTO.getProductCode() == null) {
+			throw new IllegalArgumentException("ProductCode cannot be null. Please select an order status.");
+		}
+		if (orderDTO.getOrderDate() == null) {
+			throw new IllegalArgumentException("OrderDate cannot be null. Please select an order status.");
 		}
 	}
 

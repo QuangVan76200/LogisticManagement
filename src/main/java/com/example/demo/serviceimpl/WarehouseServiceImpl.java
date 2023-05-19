@@ -44,7 +44,7 @@ public class WarehouseServiceImpl implements IWarehouseService {
 	@Override
 	public WarehouseDTO findById(Long id) {
 		Warehouse warehouse = warehouseDao.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
-		System.out.println("print warehouse "+ warehouse);
+		System.out.println("print warehouse " + warehouse);
 		return new WarehouseDTO(warehouse);
 	}
 
@@ -58,7 +58,8 @@ public class WarehouseServiceImpl implements IWarehouseService {
 	@Override
 	public WarehouseDTO newWarehouse(WarehouseDTO warehouseDto) {
 		log.info("inside new ware hosue ", warehouseDto);
-		String userName = jwtFilter.getCurrentUser();
+
+		String userName = warehouseDto.getManager().getUserName();
 		User currentManager = userDao.findByUserName(userName).orElseThrow(() -> new RuntimeException("User invalid"));
 
 		Warehouse warehouse = new Warehouse();
