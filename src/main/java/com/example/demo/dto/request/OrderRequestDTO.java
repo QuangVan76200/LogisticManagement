@@ -1,8 +1,7 @@
 package com.example.demo.dto.request;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
-import com.example.demo.enums.OrderStatusType;
 import com.example.demo.enums.OrderType;
 
 import lombok.AllArgsConstructor;
@@ -17,7 +16,7 @@ public class OrderRequestDTO {
 	private OrderUserDTO user;
 	private String productCode;
 	private Integer quantity;
-	private OrderStatusType orderStatus;
-	private LocalDateTime orderDate;
+
+	private BigDecimal discount;
 
 }

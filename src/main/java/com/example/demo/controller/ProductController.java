@@ -93,7 +93,7 @@ public class ProductController {
 				return new ResponseEntity<List<ProductDTO>>(new ArrayList<>(), HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {
-			log.error("Search maybe is wrongh: " + e.getMessage(), e);
+			log.error("Search maybe is wrong: " + e.getMessage(), e);
 		}
 		return CafeUtils.getResponseData(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.BAD_REQUEST, null);
 	}

@@ -31,8 +31,10 @@ import org.hibernate.annotations.GenericGenerator;
 import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.enums.MeasurementUnit;
 import com.example.demo.enums.ProductStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
+import lombok.ToString;
 
 @Entity
 @DynamicUpdate
@@ -88,12 +90,24 @@ public class Product implements Serializable {
 	private List<OrderItem> orderItem;
 
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+	@JsonIgnore
 	private List<Stock> listStock;
 	
 	
 	public void addStock(Stock stock) {
 		listStock.add(stock);
 		stock.setProduct(this);
+	}
+	
+	@Override
+	public String toString() {
+	    return "Product{" +
+	            "productId=" + productId +
+	            ", name='" + name + '\'' +
+	            ", description='" + description + '\'' +
+	            ", price=" + price +
+	            ", quantity=" + quantity +
+	            '}';
 	}
 
 }

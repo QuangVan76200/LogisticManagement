@@ -1,7 +1,5 @@
 package com.example.demo.dto.request;
 
-import java.math.BigDecimal;
-
 import org.springframework.beans.BeanUtils;
 
 import com.example.demo.dto.response.OrderDTO;
@@ -14,9 +12,7 @@ public class OrderItemDTO {
 
 	private Long id;
 
-	private BigDecimal totalAmount;
-
-	private OrderDTO orderId;
+	private Long orderId;
 
 	private ProductDTO productId;
 
@@ -29,5 +25,6 @@ public class OrderItemDTO {
 	public OrderItemDTO(OrderItem item) {
 		BeanUtils.copyProperties(item, this);
 		this.productId = new ProductDTO(item.getProductId());
+		this.orderId = item.getOrderId().getId();
 	}
 }

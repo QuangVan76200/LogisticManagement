@@ -3,6 +3,7 @@ package com.example.demo.entity;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,6 +57,6 @@ public class Stock implements Serializable {
 	private Shelf shelf;
 
 	@OneToMany(mappedBy = "stock", cascade = CascadeType.ALL)
-	private Set<WareTransactionDetail> transactionDetails;
+	private List<WareTransactionDetail> transactionDetails;
 
 }

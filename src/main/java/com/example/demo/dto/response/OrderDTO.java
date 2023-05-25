@@ -1,40 +1,36 @@
 package com.example.demo.dto.response;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
-import javax.persistence.Column;
 
 import org.springframework.beans.BeanUtils;
 
-import com.example.demo.dto.request.InvoiceDTO;
+import com.example.demo.dto.request.InvoiceRequestDTO;
 import com.example.demo.dto.request.OrderItemDTO;
 import com.example.demo.dto.request.OrderUserDTO;
-import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.entity.Order;
 import com.example.demo.entity.OrderItem;
 import com.example.demo.enums.OrderStatusType;
 import com.example.demo.enums.OrderType;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
 @Data
 public class OrderDTO {
 
-	private OrderType orderType;
+	private OrderType typeOrder;
 	private OrderUserDTO user;
-	private List<ProductDTO> productsOrder;
-	private BigDecimal totalAmount;
-	private OrderStatusType orderStatus;
+	private OrderStatusType status;
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime orderDate;
 
-	private Set<InvoiceDTO> invoices;
+	@JsonIgnore
+	private List<InvoiceRequestDTO> invoices;
 
-	private List<OrderItemDTO> orderItems;
+	private List<OrderItemDTO> orderItem = new ArrayList<>();
 
 	public OrderDTO() {
 
@@ -46,8 +42,11 @@ public class OrderDTO {
 		if (items != null) {
 			items.forEach(item -> {
 				OrderItemDTO orderItemDTO = new OrderItemDTO(item);
-				this.orderItems.add(orderItemDTO);
+				this.orderItem.add(orderItemDTO);
 			});
+		}
+		if (order != null) {
+			this.user = new OrderUserDTO(order.getUser().getUserName());
 		}
 	}
 

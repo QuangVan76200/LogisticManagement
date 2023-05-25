@@ -1,6 +1,7 @@
 package com.example.demo.dto.request;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.example.demo.enums.InvoiceStatusType;
@@ -12,19 +13,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvoiceDTO {
+public class InvoiceRequestDTO {
 
 	private static final long serialVersionUID = 1L;
 
-	private Long id;
+	private OrderRequestDTO oderDTO;
 
-	private Long orderId;
+	private OrderUserDTO user;
 
-	private Long userId;
+	private LocalDateTime date;
 
-	private Date date;
-
-	private Date dueDate;
+	private LocalDateTime dueDate;
 
 	private BigDecimal total;
 

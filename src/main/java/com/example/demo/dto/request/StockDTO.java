@@ -21,6 +21,5 @@ public class StockDTO {
 		this.shelf = new ShelfDTO(stock.getShelf());
 	}
 
-	// Getters and setters
 
 }

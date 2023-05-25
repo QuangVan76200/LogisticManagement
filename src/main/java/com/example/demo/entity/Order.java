@@ -3,6 +3,7 @@ package com.example.demo.entity;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -25,6 +26,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import com.example.demo.enums.OrderStatusType;
 import com.example.demo.enums.OrderType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -57,20 +59,23 @@ public class Order implements Serializable {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "TypeOrder", nullable = false, length = 50)
 	private OrderType typeOrder;
-	
-	private BigDecimal totalAmount;
 
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-	private List<Invoice> invoices;
-	
+	private List<Invoice> invoices = new ArrayList<>();
+
 	@OneToMany(mappedBy = "orderId", cascade = CascadeType.ALL)
-	private List<OrderItem> orderItem;
+	@JsonIgnore
+	private List<OrderItem> orderItem = new ArrayList<>();;
 
 	public void addInvoice(Invoice invoice) {
 		invoices.add(invoice);
 		invoice.setOrder(this);
 	}
-	
-	
- 
+
+	@Override
+	public String toString() {
+		return "Order [id=" + id + ", user=" + user + ", orderDate=" + orderDate + ", status=" + status + ", typeOrder="
+				+ typeOrder + "]";
+	}
+
 }

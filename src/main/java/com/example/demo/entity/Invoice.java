@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -47,10 +48,10 @@ public class Invoice implements Serializable {
 	private User user;
 
 	// Date create Invoice
-	private Date date;
+	private LocalDateTime date;
 
-	// Ngày đáo hạn thanh toán cho hóa đơn.
-	private Date dueDate;
+	// Payment due date for the invoice.
+	private LocalDateTime dueDate;
 
 	private BigDecimal total;
 
@@ -60,7 +61,5 @@ public class Invoice implements Serializable {
 
 	@Column(name = "Status", nullable = false, length = 20)
 	private InvoiceStatusType status;
-	
-//	@OneToMany(mappedBy = "invoice")
-//	private Set<Product> listProduct;
+
 }

@@ -3,7 +3,6 @@ package com.example.demo.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -20,7 +19,7 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.example.demo.dto.request.ShelfDTO;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -47,7 +46,9 @@ public class Shelf implements Serializable {
 	@Column(name = "Capacity", nullable = false)
 	private Integer capacity;
 
+	
 	@OneToMany(mappedBy = "shelf", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JsonIgnore
 	private List<Stock> listStock = new ArrayList<>();
 
 	@ManyToOne
@@ -58,4 +59,11 @@ public class Shelf implements Serializable {
 		listStock.add(stock);
 	}
 
+	@Override
+	public String toString() {
+		return "Shelf [shelfId=" + shelfId + ", name=" + name + ", location=" + location + ", capacity=" + capacity
+				+ ", warehouse=" + warehouse + "]";
+	}
+
+	
 }
