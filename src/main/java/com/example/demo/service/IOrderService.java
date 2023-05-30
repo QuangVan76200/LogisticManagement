@@ -17,7 +17,7 @@ public interface IOrderService {
 
 	ResponseEntity<?> newOrder(OrderRequestDTO orderDTO);
 
-	public List<OrderDTO> listOrderByOrderDate(Date date);
+	public List<OrderDTO> listOrderByOrderDate(Date fromDate, Date toDate);
 
 	ResponseEntity<?> updateStatusOrder(Map<String, String> request); // Id :Order and set new :Status
 

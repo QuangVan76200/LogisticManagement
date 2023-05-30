@@ -124,7 +124,6 @@ public class OrderServiceImpl implements IOrderService {
 			return CafeUtils.getResponseData("User is not active", HttpStatus.BAD_REQUEST, null);
 		}
 
-		log.info("test User " + user);
 		newOrder.setUser(user.isEmpty() ? createTransactionUser : user.get());
 
 		newOrder.setOrderItem(new ArrayList<>(orderDTO.getQuantity()));
@@ -133,7 +132,6 @@ public class OrderServiceImpl implements IOrderService {
 		List<Stock> stocksToRemove = new ArrayList<>();
 
 		Product product = productDao.findByProductCode(orderDTO.getProductCode());
-		System.out.println("asdaddsad " + product);
 		if (product == null) {
 			return CafeUtils.getResponse("Product Not Found", HttpStatus.NOT_FOUND);
 		} else if (product.getListStock().size() < orderDTO.getQuantity()) {
@@ -275,9 +273,10 @@ public class OrderServiceImpl implements IOrderService {
 	}
 
 	@Override
-	public List<OrderDTO> listOrderByOrderDate(Date date) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<OrderDTO> listOrderByOrderDate(Date fromDate, Date toDate) {
+
+		return orderDao.findByOrderDateBetween(fromDate, toDate).stream().map(order -> new OrderDTO(order))
+				.collect(Collectors.toList());
 	}
 
 	@Override

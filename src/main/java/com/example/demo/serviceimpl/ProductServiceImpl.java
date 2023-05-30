@@ -1,5 +1,6 @@
 package com.example.demo.serviceimpl;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -96,16 +97,10 @@ public class ProductServiceImpl implements IProductService {
 	}
 
 	/**
-	 * Create new products.
+	 * Creates a new product based on the provided product DTO.
 	 *
-	 * @param productDto The ProductDTO object contains new product information.
-	 * @return Returns a ResponseEntity object containing the data and the
-	 *         corresponding status code. If the new product creation is successful,
-	 *         the ResponseEntity object will contain the data that is the newly
-	 *         created ProductDTO object, message "create Product successfully" and
-	 *         status code HttpStatus.OK. If an error occurs, the ResponseEntity
-	 *         object will contain the message "Something went wrong" and the status
-	 *         code HttpStatus.BAD_REQUEST.
+	 * @param productDto The product DTO containing the information of the product.
+	 * @return The response entity with the result of the operation.
 	 */
 	@Override
 	@Transactional
@@ -114,92 +109,21 @@ public class ProductServiceImpl implements IProductService {
 		try {
 			validateProductDTO(productDto);
 
-			Product newProduct = new Product();
-			BeanUtils.copyProperties(productDto, newProduct);
+			Product newProduct = createNewProduct(productDto);
 
-			if (productDto.getImages() != null && productDto.getImages().size() > 0) {
-				List<String> imageUrls = fileUploadService.uploadFiles(productDto.getImages());
-				newProduct.setImages(imageUrls);
-			}
-
-			String newAvatar = fileUploadService.uploadFile(productDto.getAvatar());
-
-			newProduct.setAvatar(StringUtils.isBlank(newAvatar)
-					? new FileMissingException("Product image cannot be blank", HttpStatus.BAD_REQUEST).toString()
-					: newAvatar);
 			int quantity = productDto.getQuantity();
 
 			List<Shelf> availableShelves = shelfDao.findAvailableShelves();
 
-			if (availableShelves.isEmpty()) {
-				throw new Exception("Can't find empty shelves or enough room to store products.");
-			}
-			
-			newProduct.setProductStatus(ProductStatus.IN_STOCK);
+			validateAvailableShelves(availableShelves);
 
-			newProduct.setRerceiptDate(dateUtils.convertDateToLocalDateTime(new Date()));
-
-			List<Stock> listStock = new ArrayList<>();
-
-			Product savedProduct = productDao.save(newProduct);
-
-			boolean isShelfFound = false;
-			for (Shelf shelf : availableShelves) {
-				int availableSpace = getAvalibleCapacity(shelf);
-
-				if (availableSpace > 0) {
-					int spaceToUse = Math.min(availableSpace, quantity);
-					for (int i = 1; i <= spaceToUse; i++) {
-						Stock newStock = new Stock();
-						newStock.setLastUpdateDate(dateUtils.convertDateToLocalDateTime(new Date()));
-						newStock.setProduct(newProduct);
-						newStock.setShelf(shelf);
-
-						stockDao.save(newStock);
-						listStock.add(newStock);
-
-						quantity--;
-					}
-
-					isShelfFound = true;
-					if (quantity == 0) {
-						break;
-					}
-				}
-			}
-
-			log.info("Size List", listStock.size());
-
-			if (!isShelfFound || quantity > 0) {
-				throw new Exception("Can't find enough space to store all products.");
-			}
+			List<Stock> listStock = allocateStockToShelves(newProduct, availableShelves, quantity);
 
 			newProduct.setListStock(listStock);
 
-			String userName = jwtFilter.getCurrentUser();
-			User createTransactionUser = getCuurentUser(userName);
+			createWareTransaction(newProduct, listStock);
 
-			WareTransaction wareTransaction = new WareTransaction();
-			wareTransaction.setUser(createTransactionUser);
-			wareTransaction.setTransactionDate(dateUtils.convertDateToLocalDateTime(new Date()));
-			wareTransaction.setTransactionType(WareTransactionType.IMPORT);
-			wareTransaction.setTransactionDetails(new ArrayList<>());
-
-			for (Stock stock : listStock) {
-				WareTransactionDetail detail = new WareTransactionDetail();
-				detail.setWareTransaction(wareTransaction);
-				detail.setStock(stock);
-//				detail.setQuantity(quantityStock);
-				// WareTransactionDetail
-
-				wareTransaction.getTransactionDetails().add(detail);
-			}
-
-			wareTransaction = wareTransactionDao.save(wareTransaction);
-
-			com.example.demo.dto.response.ProductDTO savedProductDTO = new com.example.demo.dto.response.ProductDTO(
-					newProduct);
-			BeanUtils.copyProperties(savedProduct, savedProductDTO);
+			com.example.demo.dto.response.ProductDTO savedProductDTO = convertToProductDTO(newProduct);
 
 			return CafeUtils.getResponseData("create Product successfully", HttpStatus.OK, savedProductDTO);
 		} catch (Exception e) {
@@ -208,6 +132,145 @@ public class ProductServiceImpl implements IProductService {
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CafeConstants.SOMETHING_WENT_WRONG);
 
+	}
+
+	/**
+	 * Creates a new product based on the provided product DTO.
+	 *
+	 * @param productDto The product DTO containing the information of the product.
+	 * @return The newly created product.
+	 * @throws IOException If an error occurs during file upload.
+	 */
+	private Product createNewProduct(ProductDTO productDto) throws IOException {
+		Product newProduct = new Product();
+		BeanUtils.copyProperties(productDto, newProduct);
+		newProduct.setProductStatus(ProductStatus.IN_STOCK);
+		newProduct.setRerceiptDate(dateUtils.convertDateToLocalDateTime(new Date()));
+		if (productDto.getImages() != null && productDto.getImages().size() > 0) {
+			List<String> imageUrls = fileUploadService.uploadFiles(productDto.getImages());
+			newProduct.setImages(imageUrls);
+		}
+
+		String newAvatar = fileUploadService.uploadFile(productDto.getAvatar());
+
+		newProduct.setAvatar(StringUtils.isBlank(newAvatar)
+				? new FileMissingException("Product image cannot be blank", HttpStatus.BAD_REQUEST).toString()
+				: newAvatar);
+
+		return productDao.save(newProduct);
+
+	}
+
+	/**
+	 * Validates the availability of shelves for storing products.
+	 *
+	 * @param shelves The list of shelves to validate.
+	 * @throws Exception If no empty shelves or enough room is found.
+	 */
+	private void validateAvailableShelves(List<Shelf> shelves) throws Exception {
+		if (shelves.isEmpty()) {
+			throw new Exception("Can't find empty shelves or enough room to store products.");
+		}
+	}
+
+	/**
+	 * Allocates stocks to available shelves for the given product.
+	 *
+	 * @param newProduct The newly created product.
+	 * @param shelves    The available shelves.
+	 * @param quantity   The quantity of stocks to allocate.
+	 * @return The list of allocated stocks.
+	 * @throws Exception If there is not enough space to store all products.
+	 */
+	private List<Stock> allocateStockToShelves(Product newProduct, List<Shelf> shelves, int quantity) throws Exception {
+
+		List<Stock> listStock = new ArrayList<>();
+		boolean isShelfFound = false;
+		for (Shelf shelf : shelves) {
+			int availableSpace = getAvalibleCapacity(shelf);
+
+			if (availableSpace > 0) {
+				int spaceToUse = Math.min(availableSpace, quantity);
+				for (int i = 1; i <= spaceToUse; i++) {
+					Stock newStock = createNewStock(newProduct, shelf);
+
+					stockDao.save(newStock);
+					listStock.add(newStock);
+
+					quantity--;
+				}
+
+				isShelfFound = true;
+				if (quantity == 0) {
+					break;
+				}
+			}
+		}
+
+		log.info("Size List", listStock.size());
+
+		if (!isShelfFound || quantity > 0) {
+			throw new Exception("Can't find enough space to store all products.");
+		}
+
+		return listStock;
+	}
+
+	/**
+	 * Creates a new stock for the given product and shelf.
+	 *
+	 * @param newProduct The newly created product.
+	 * @param shelf      The shelf to allocate the stock.
+	 * @return The newly created stock.
+	 */
+	public Stock createNewStock(Product newProduct, Shelf shelf) {
+		Stock newStock = new Stock();
+		newStock.setLastUpdateDate(dateUtils.convertDateToLocalDateTime(new Date()));
+		newStock.setProduct(newProduct);
+		newStock.setShelf(shelf);
+
+		return newStock;
+	}
+
+	/**
+	 * Creates a ware transaction for the given product and list of stocks.
+	 *
+	 * @param product   The product involved in the transaction.
+	 * @param listStock The list of stocks to include in the transaction.
+	 */
+	private void createWareTransaction(Product product, List<Stock> listStock) {
+		String userName = jwtFilter.getCurrentUser();
+		User createTransactionUser = getCuurentUser(userName);
+
+		WareTransaction wareTransaction = new WareTransaction();
+		wareTransaction.setUser(createTransactionUser);
+		wareTransaction.setTransactionDate(dateUtils.convertDateToLocalDateTime(new Date()));
+		wareTransaction.setTransactionType(WareTransactionType.IMPORT);
+		wareTransaction.setTransactionDetails(new ArrayList<>());
+
+		for (Stock stock : listStock) {
+			WareTransactionDetail detail = new WareTransactionDetail();
+			detail.setWareTransaction(wareTransaction);
+			detail.setStock(stock);
+//			detail.setQuantity(quantityStock);
+			// WareTransactionDetail
+
+			wareTransaction.getTransactionDetails().add(detail);
+		}
+
+		wareTransaction = wareTransactionDao.save(wareTransaction);
+	}
+
+	/**
+	 * Converts a product entity to a product DTO.
+	 *
+	 * @param product The product entity to convert.
+	 * @return The product DTO.
+	 */
+	private com.example.demo.dto.response.ProductDTO convertToProductDTO(Product product) {
+		com.example.demo.dto.response.ProductDTO productDTO = new com.example.demo.dto.response.ProductDTO(product);
+		BeanUtils.copyProperties(product, productDTO);
+		return productDTO;
 	}
 
 	/** Returns the empty space in List<Stock> contained in the Shelf **/
@@ -241,8 +304,9 @@ public class ProductServiceImpl implements IProductService {
 			return productsDTO;
 		} catch (Exception e) {
 			log.error("Error! An error occurred. Please try again later: " + e.getMessage(), e);
+			return Collections.emptyList();
 		}
-		return Collections.emptyList();
+
 	}
 
 	private void validateProductDTO(ProductDTO productDTO) {

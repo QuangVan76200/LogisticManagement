@@ -1,15 +1,18 @@
 package com.example.demo.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.constants.CafeConstants;
@@ -37,8 +40,11 @@ public class OrderController {
 	@Autowired
 	private IOrderDao orderDao;
 
-	@Autowired
-	private IOrderService orderService;
+	private final IOrderService orderService;
+
+	public OrderController(IOrderService orderService) {
+		this.orderService = orderService;
+	}
 
 	@Autowired
 	JWTFilter jwtFilter;
@@ -64,6 +70,23 @@ public class OrderController {
 		try {
 			if (jwtFilter.isStaff() || jwtFilter.isManager() || jwtFilter.isCustomer()) {
 				List<OrderDTO> listAllOrders = orderService.findAll();
+				return CafeUtils.getResponseData("succesfully", HttpStatus.OK, listAllOrders);
+			} else {
+				return new ResponseEntity<List<ProductDTO>>(new ArrayList<>(), HttpStatus.UNAUTHORIZED);
+			}
+		} catch (Exception e) {
+			log.error("An error occurred while getting the list of orders: " + e.getMessage(), e);
+		}
+		return new ResponseEntity<List<ProductDTO>>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@GetMapping(path = "/listOrderByOrderDate")
+	ResponseEntity<?> listOrderByOrderDate(
+			@RequestParam("fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+			@RequestParam("toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
+		try {
+			if (jwtFilter.isStaff() || jwtFilter.isManager() || jwtFilter.isCustomer()) {
+				List<OrderDTO> listAllOrders = orderService.listOrderByOrderDate(fromDate, toDate);
 				return CafeUtils.getResponseData("succesfully", HttpStatus.OK, listAllOrders);
 			} else {
 				return new ResponseEntity<List<ProductDTO>>(new ArrayList<>(), HttpStatus.UNAUTHORIZED);
